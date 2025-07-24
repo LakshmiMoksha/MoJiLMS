@@ -59,7 +59,15 @@ def init_db():
             request_date DATE DEFAULT CURRENT_DATE
         );
     ''')
-
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            phone TEXT NOT NULL,
+            password TEXT NOT NULL
+        );
+    ''')
     # Create books table
     conn.execute('''
         CREATE TABLE IF NOT EXISTS books (
