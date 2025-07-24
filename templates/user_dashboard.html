@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MoJi LMS - User Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(to right, #e0eafc, #cfdef3);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background: linear-gradient(to right, #4e54c8, #8f94fb);
+        }
+        .navbar-brand {
+            color: #fff !important;
+            font-weight: bold;
+        }
+        .nav-link {
+            color: white !important;
+        }
+        .welcome-box {
+            background: #fff;
+            padding: 30px;
+            margin-top: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .book-card {
+            background: #fff;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .btn-borrow {
+            background: linear-gradient(to right, #43e97b, #38f9d7);
+            border: none;
+            color: white;
+        }
+        .btn-return {
+            background-color: #ff5e62;
+            color: white;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">📚 MoJi LMS</a>
+    <ul class="navbar-nav ms-auto">
+      <li class="nav-item">
+        <a class="nav-link" href="#mybooks">My Books</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container mt-4">
+    <div class="welcome-box text-center">
+        <h2>Welcome to MoJi Library Management System</h2>
+        <p>Explore available books and borrow your favorite ones!</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} mt-3">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <h3 class="mt-5 mb-3">Available Books</h3>
+    <div class="input-group mb-4">
+        <input type="text" id="bookSearch" class="form-control" placeholder="🔍 Search available books...">
+    </div>
+
+    <div class="row" id="bookList">
+        {% for book in books %}
+        <div class="col-md-4">
+            <div class="card book-card p-3">
+                <h5>{{ book.title }}</h5>
+                <p><strong>Author:</strong> {{ book.author }}</p>
+                <form method="POST" action="{{ url_for('borrow_book') }}">
+                    <input type="hidden" name="book_id" value="{{ book.id }}">
+                    <button type="submit" class="btn btn-borrow mt-2">➕ Add to My Books</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <h3 id="mybooks" class="mt-5 mb-3">📘 My Books</h3>
+    {% if issued_books %}
+    <div class="table-responsive">
+      <table class="table table-bordered bg-white">
+        <thead class="table-primary">
+            <tr>
+                <th>Title</th>
+                <th>Issue Date</th>
+                <th>Due Date</th>
+                <th>Return Date</th>
+                <th>Fine (₹)</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for ib in issued_books %}
+            <tr id="issue-{{ ib.issue_id }}">
+                <td>{{ ib.title }}</td>
+                <td>{{ ib.issue_date }}</td>
+                <td>{{ ib.due_date }}</td>
+                <td>{{ ib.return_date or 'Not returned' }}</td>
+                <td>{{ ib.fine or 0 }}</td>
+                <td>
+                    {% if not ib.return_date %}
+                    <form class="return-form" data-issue-id="{{ ib.issue_id }}">
+                        <button type="submit" class="btn btn-sm btn-return">Return</button>
+                    </form>
+                    {% else %}
+                    <span class="text-success">Returned</span>
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+        <p class="text-muted">You haven't borrowed any books yet.</p>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const returnForms = document.querySelectorAll('.return-form');
+    const alertPlaceholder = document.getElementById('returnAlertPlaceholder');
+
+    returnForms.forEach(form => {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const row = form.closest('tr');
+            if (row) row.remove();
+
+            // Create Bootstrap alert
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show mt-3';
+            alertDiv.role = 'alert';
+            alertDiv.innerHTML = `
+                📘 Book returned successfully!
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            alertPlaceholder.innerHTML = ''; // Clear any previous alerts
+            alertPlaceholder.appendChild(alertDiv);
+        });
+    });
+
+    // Book search functionality
+    const searchInput = document.getElementById('bookSearch');
+    const bookCards = document.querySelectorAll('#bookList .col-md-4');
+
+    searchInput.addEventListener('keyup', function () {
+        const searchValue = this.value.toLowerCase();
+
+        bookCards.forEach(card => {
+            const title = card.querySelector('h5').textContent.toLowerCase();
+            const author = card.querySelector('p').textContent.toLowerCase();
+
+            if (title.includes(searchValue) || author.includes(searchValue)) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+});
+</script>
+
+</body>
+</html>

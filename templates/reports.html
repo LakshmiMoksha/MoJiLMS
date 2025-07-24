@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Library Reports</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    
+    <style>
+    .bg-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            min-width: 100%;
+            min-height: 100%;
+            z-index: -1;
+            object-fit: cover;
+        }
+        </style>
+
+</head>
+<body>
+    <!-- ✅ Background Video -->
+    <video autoplay muted loop class="bg-video">
+        <source src="{{ url_for('static', filename='video/sparkle.mp4') }}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4">
+        <a class="navbar-brand" href="#">MoJi LMS Admin</a>
+        <div class="collapse navbar-collapse" id="adminNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                </li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('members') }}" >Manage Members</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('reports') }}">View Reports</a></li>
+            </ul>
+            <span class="navbar-text me-3 text-white">
+                Welcome, {{ session.get('admin', 'Admin') }}
+            </span>
+            <a class="btn btn-outline-light" href="{{ url_for('logout') }}">Logout</a>
+        </div>
+    </nav>
+    
+    <div class="container mt-5">
+        <h2 style="color: aliceblue;">Library Reports</h2>
+        <hr />
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card text-white bg-primary mb-3">
+                    <div class="card-header">Books Issued This Week</div>
+                    <div class="card-body">
+                        <h3 class="card-title">{{ weekly_issued }}</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card text-white bg-info mb-3">
+                    <div class="card-header">Books Issued This Month</div>
+                    <div class="card-body">
+                        <h3 class="card-title">{{ monthly_issued }}</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card text-white bg-success mb-3">
+                    <div class="card-header">Books Issued This Year</div>
+                    <div class="card-body">
+                        <h3 class="card-title">{{ yearly_issued }}</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card text-white bg-warning mb-3">
+                    <div class="card-header">Total Members</div>
+                    <div class="card-body">
+                        <h3 class="card-title">{{ total_members }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card text-white bg-danger mb-3">
+                    <div class="card-header">Total Books in Library</div>
+                    <div class="card-body">
+                        <h3 class="card-title">{{ total_books }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

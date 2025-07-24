@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Book Requests{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Pending Book Requests</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% if requests %}
+        <table class="table table-bordered table-hover shadow rounded">
+            <thead class="table-dark">
+                <tr>
+                    <th>Request ID</th>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Book Title</th>
+                    <th>Author</th>
+                    <th>Approve with Due Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in requests %}
+                <tr>
+                    <td>{{ req.id }}</td>
+                    <td>{{ req.name }}</td>
+                    <td>{{ req.email }}</td>
+                    <td>{{ req.title }}</td>
+                    <td>{{ req.author }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('approve_book_request', request_id=req.id) }}">
+                            <input type="date" name="due_date" required class="form-control mb-2">
+                            <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-info">No pending book requests.</div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,141 @@
+/* -------------------- BACKGROUND VIDEO POSITIONING -------------------- */
+.bg-video {
+    position: fixed;
+    top: 0;
+    left: 0;
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+
+/* -------------------- CONTENT CENTERING -------------------- */
+.glass-box {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    max-width: 900px;
+    margin: auto;
+    margin-top: 120px;
+}
+.btn-gradient {
+    background: linear-gradient(to right, #922f8b, #ffb6c1);
+    color: white;
+    border: none;
+    transition: background 0.3s ease;
+}
+.btn-gradient:hover {
+    background: linear-gradient(to right, #c70085, #ff7baf);
+}
+
+
+.glass-navbar {
+    background: rgba(0, 0, 0, 0.25);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 0 0 20px 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+.content{
+    background: rgba(0, 0, 0, 0.25);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 0 0 20px 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+.navbar .nav-link {
+    font-weight: 500;
+    transition: 0.3s;
+}
+
+.navbar .nav-link:hover {
+    color: #ffd369 !important;
+}
+
+/* Dropdown Glass Style */
+.glass-dropdown {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: #fff;
+}
+
+.dropdown-item {
+    color: #fff;
+    transition: 0.3s;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: #ffd369;
+}
+
+
+.sub-caption {
+    font-size: 1.2rem;
+    color: #e6e6e6;
+    margin-bottom: 30px;
+}
+
+/* -------------------- BUTTONS -------------------- */
+.btn-style,
+.btn-outline-style {
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 50px;
+    border: none;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.btn-style.admin {
+    background: linear-gradient(to right,purple,lightpink);
+    color: #fff;
+}
+
+.btn-style.user {
+    background: linear-gradient(to right, purple, lightpink);
+    color: #fff;
+}
+
+.btn-style:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+
+
+
+.btn-outline-style:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    transform: scale(1.05);
+}
+
+/* -------------------- BUTTON ALIGNMENT ON SMALL SCREENS -------------------- */
+@media (max-width: 768px) {
+    .btn-style, .btn-outline-style {
+        width: 100%;
+    }
+}
+.form-control {
+    background-color: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    backdrop-filter: blur(6px);
+    border-radius: 12px;
+}
+
+.form-control::placeholder {
+    color: #ddd;
+}
+
+.link-style {
+    text-decoration: underline;
+    font-weight: 500;
+}

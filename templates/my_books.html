@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Issued Books - MoJi LMS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<!-- ✅ Background Video -->
+    <video autoplay muted loop class="bg-video">
+        <source src="{{ url_for('static', filename='video/sparkle.mp4') }}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4">
+        <a class="navbar-brand fw-bold" href="{{ url_for('user_dashboard') }}">MoJi LMS</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('user_dashboard') }}">Home</a></li>
+                <li class="nav-item"><a class="nav-link active" href="{{ url_for('user_issued_books') }}">My Books</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('request_book_form') }}">Request Book</a></li>
+            </ul>
+            <span class="navbar-text text-white me-3">👤 {{ session.get('user_name', 'User') }}</span>
+            <a class="btn btn-outline-light" href="{{ url_for('logout') }}">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h2 class="text-center text-white mb-4"><b>My Issued Books</b></h2>
+
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover shadow-sm bg-light">
+                <thead class="table-dark text-center">
+                    <tr>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Issued Date</th>
+                        <th>Return Date</th>
+                        <th>Fine (₹)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for book in books %}
+                    <tr class="text-center">
+                        <td>{{ book.title }}</td>
+                        <td>{{ book.author }}</td>
+                        <td>{{ book.issue_date }}</td>
+                        <td>{{ book.return_date }}</td>
+                        <td>{{ "%.2f"|format(book.fine or 0) }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center text-danger">No books issued yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</body>
+</html>
