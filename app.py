@@ -270,6 +270,13 @@ def admin_login():
             return redirect(url_for('admin_login'))
     
     return render_template('base.html')
+@app.route("/about")
+def about():
+    return render_template("about.html")
+
+@app.route("/contact")
+def contact():
+    return render_template("contact.html")
 
 # -------------------- ADMIN DASHBOARD --------------------
 @app.route('/admin/dashboard', endpoint='admin_dashboard')
