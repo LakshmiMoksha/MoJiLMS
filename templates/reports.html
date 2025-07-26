@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Library Reports</title>
+    <title>User Book Activity Report</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-    
     <style>
         .bg-video {
             position: fixed;
@@ -25,12 +24,12 @@
 
         .card-header {
             font-weight: 600;
-            background: linear-gradient(to right, #00b09b, #96c93d); /* greenish gradient */
+            background: linear-gradient(to right, #00b09b, #96c93d);
             color: white;
         }
 
         .card-body {
-            font-size: 2rem;
+            font-size: 1.2rem;
         }
 
         .navbar {
@@ -41,82 +40,129 @@
             color: #f8f9fa;
             text-shadow: 1px 1px 4px #000;
         }
+
+        table {
+            color: #fff;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        th {
+            background: linear-gradient(to right, #667eea, #764ba2);
+        }
     </style>
 </head>
 <body>
-    <!-- ✅ Background Video -->
-    <video autoplay muted loop class="bg-video">
-        <source src="{{ url_for('static', filename='video/watery.mp4') }}" type="video/mp4">
-        Your browser does not support the video tag.
-    </video>
+<video autoplay muted loop class="bg-video">
+    <source src="{{ url_for('static', filename='video/watery.mp4') }}" type="video/mp4">
+    Your browser does not support the video tag.
+</video>
 
-    <nav class="navbar navbar-expand-lg navbar-dark px-4">
-        <a class="navbar-brand" href="#">MoJi LMS Admin</a>
-        <div class="collapse navbar-collapse" id="adminNav">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('members') }}">Manage Members</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('reports') }}">View Reports</a></li>
-            </ul>
-            <span class="navbar-text me-3 text-white">
-                Welcome, {{ session.get('admin', 'Admin') }}
-            </span>
-            <a class="btn btn-outline-light" href="{{ url_for('logout') }}">Logout</a>
+<nav class="navbar navbar-expand-lg navbar-dark px-4">
+    <a class="navbar-brand" href="#">MoJi LMS Admin</a>
+    <div class="collapse navbar-collapse" id="adminNav">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('members') }}">Manage Members</a></li>
+            <li class="nav-item"><a class="nav-link active" href="{{ url_for('reports') }}">View Reports</a></li>
+        </ul>
+        <span class="navbar-text me-3 text-white">
+            Welcome, {{ session.get('admin', 'Admin') }}
+        </span>
+        <a class="btn btn-outline-light" href="{{ url_for('logout') }}">Logout</a>
+    </div>
+</nav>
+
+<div class="container mt-5">
+    <h2 class="mb-4">User Book Activity Report</h2>
+
+    <div class="card mb-5">
+        <div class="card-header">Users and Number of Books Borrowed</div>
+        <div class="card-body">
+            {% if user_book_counts %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover text-center">
+                        <thead>
+                            <tr>
+                                <th>User ID</th>
+                                <th>Username</th>
+                                <th>Total Books Borrowed</th>
+                                <th>Last Issue Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in user_book_counts %}
+                                <tr>
+                                    <td>{{ row['id'] }}</td>
+                                    <td>{{ row['username'] }}</td>
+                                    <td>{{ row['total_issued'] }}</td>
+                                    <td>{{ row['last_issue_date'] or 'N/A' }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No borrowing records found.</p>
+            {% endif %}
         </div>
-    </nav>
+    </div>
 
-    <div class="container mt-5">
-        <h2 class="mb-4"> Library Reports</h2>
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header"> Books Issued This Week</div>
-                    <div class="card-body text-center">
-                        {{ weekly_issued }}
-                    </div>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header" style="background: linear-gradient(to right, #ff512f, #dd2476);">
+                    Today's Borrows
                 </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header" style="background: linear-gradient(to right, #2193b0, #6dd5ed);"> Books Issued This Month</div>
-                    <div class="card-body text-center">
-                        {{ monthly_issued }}
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header" style="background: linear-gradient(to right, #cc2b5e, #753a88);"> Books Issued This Year</div>
-                    <div class="card-body text-center">
-                        {{ yearly_issued }}
-                    </div>
+                <div class="card-body text-center">
+                    {{ daily_borrows }}
                 </div>
             </div>
         </div>
 
-        <div class="row mt-4 g-4">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header" style="background: linear-gradient(to right, #f7971e, #ffd200);"> Total Members</div>
-                    <div class="card-body text-center">
-                        {{ total_members }}
-                    </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header" style="background: linear-gradient(to right, #56ab2f, #a8e063);">
+                    Weekly Borrows
+                </div>
+                <div class="card-body text-center">
+                    {{ weekly_borrows }}
                 </div>
             </div>
+        </div>
 
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header" style="background: linear-gradient(to right, #1e3c72, #2a5298);"> Total Books</div>
-                    <div class="card-body text-center">
-                        {{ total_books }}
-                    </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header" style="background: linear-gradient(to right, #396afc, #2948ff);">
+                    Monthly Borrows
+                </div>
+                <div class="card-body text-center">
+                    {{ monthly_borrows }}
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <div class="row mt-5 g-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header" style="background: linear-gradient(to right, #f7971e, #ffd200);"> Total Members</div>
+                <div class="card-body text-center">
+                    {{ total_members }}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header" style="background: linear-gradient(to right, #1e3c72, #2a5298);"> Total Books</div>
+                <div class="card-body text-center">
+                    {{ total_books }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

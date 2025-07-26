@@ -136,7 +136,7 @@ def create_issued_books_table():
     conn = get_db_connection()
     conn.execute('''
         CREATE TABLE IF NOT EXISTS issued_books (
-            issue_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,
             book_id INTEGER,
             issue_date TEXT,
@@ -410,25 +410,60 @@ def login_user():
 
 
 # ------------------ USER DASHBOARD ------------------
-@app.route('/user/dashboard')
+
+
+@app.route('/user_dashboard')
 def user_dashboard():
     if 'user_id' not in session:
-        flash("Please login first.", "warning")
+        flash("Please log in to access the dashboard.", "warning")
         return redirect(url_for('login'))
 
+    user_id = session['user_id']
     conn = get_db_connection()
-    books = conn.execute("SELECT * FROM books").fetchall()
 
-    issued_books = conn.execute("""SELECT ib.issue_id, b.title, ib.issue_date, ib.due_date, ib.return_date, ib.fine
- 
-        FROM issued_books ib 
-        JOIN books b ON ib.book_id = b.id 
+    # Fetch all available books
+    books = conn.execute('SELECT * FROM books').fetchall()
+
+    # Fetch books issued to the user
+    issued_books = conn.execute('''
+        SELECT ib.issue_id, b.title, ib.issue_date, ib.due_date, ib.return_date, ib.fine
+        FROM issued_books ib
+        JOIN books b ON ib.book_id = b.id
         WHERE ib.user_id = ?
         ORDER BY ib.issue_date DESC
-    """, (session['user_id'],)).fetchall()
+    ''', (user_id,)).fetchall()
+
+    today = datetime.today().date()
+    last_week = today - timedelta(days=7)
+    last_month = today - timedelta(days=30)
+
+    # Borrow stats
+    daily_borrow_count = conn.execute('''
+        SELECT COUNT(*) FROM issued_books
+        WHERE user_id = ? AND DATE(issue_date) = ?
+    ''', (user_id, today.isoformat())).fetchone()[0]
+
+    weekly_borrow_count = conn.execute('''
+        SELECT COUNT(*) FROM issued_books
+        WHERE user_id = ? AND DATE(issue_date) >= ?
+    ''', (user_id, last_week.isoformat())).fetchone()[0]
+
+    monthly_borrow_count = conn.execute('''
+        SELECT COUNT(*) FROM issued_books
+        WHERE user_id = ? AND DATE(issue_date) >= ?
+    ''', (user_id, last_month.isoformat())).fetchone()[0]
+
     conn.close()
 
-    return render_template("user_dashboard.html", books=books, issued_books=issued_books)
+    return render_template(
+        'user_dashboard.html',
+        books=books,
+        issued_books=issued_books,
+        daily_borrow_count=daily_borrow_count,
+        weekly_borrow_count=weekly_borrow_count,
+        monthly_borrow_count=monthly_borrow_count
+    )
+
 
 
 
@@ -628,52 +663,61 @@ def return_books(request_id):
     return redirect(url_for('user_dashboard'))
 
 # -------------------- REPORTS --------------------
-
 @app.route('/reports')
 def reports():
     if 'admin' not in session:
-        flash('Access denied. Please login as admin.', 'danger')
-        return redirect(url_for('admin_login'))
+        flash("Please log in to access reports.", "danger")
+        return redirect(url_for('login'))
 
     conn = get_db_connection()
 
-    today = datetime.today()
-    one_week_ago = today - timedelta(days=7)
-    one_month_ago = today - timedelta(days=30)
-    one_year_ago = today - timedelta(days=365)
+    # Daily, weekly, monthly counts
+    today = datetime.today().date()
+    last_week = today - timedelta(days=7)
+    last_month = today - timedelta(days=30)
 
-    # Total books issued in last week, month, year
-    weekly_issued = conn.execute(
-        'SELECT COUNT(*) FROM issues WHERE issue_date BETWEEN ? AND ?',
-        (one_week_ago.date(), today.date())
-    ).fetchone()[0]
+    daily_borrows = conn.execute('''
+        SELECT COUNT(*) FROM issued_books
+        WHERE DATE(issue_date) = ?
+    ''', (today.isoformat(),)).fetchone()[0]
 
-    monthly_issued = conn.execute(
-        'SELECT COUNT(*) FROM issues WHERE issue_date BETWEEN ? AND ?',
-        (one_month_ago.date(), today.date())
-    ).fetchone()[0]
+    weekly_borrows = conn.execute('''
+        SELECT COUNT(*) FROM issued_books
+        WHERE DATE(issue_date) >= ?
+    ''', (last_week.isoformat(),)).fetchone()[0]
 
-    yearly_issued = conn.execute(
-        'SELECT COUNT(*) FROM issues WHERE issue_date BETWEEN ? AND ?',
-        (one_year_ago.date(), today.date())
-    ).fetchone()[0]
+    monthly_borrows = conn.execute('''SELECT COUNT(*) FROM issued_books
+        WHERE DATE(issue_date) >= ?
+    ''', (last_month.isoformat(),)).fetchone()[0]
 
-    # Total members
+    # ❗ FIX THIS INDENTATION
+    user_book_counts = conn.execute('''
+        SELECT 
+            users.id,
+            users.username,
+            COUNT(issued_books.issue_id) AS total_issued,
+            MAX(issued_books.issue_date) AS last_issue_date
+        FROM users
+        LEFT JOIN issued_books ON users.id = issued_books.user_id
+        GROUP BY users.id
+        ORDER BY total_issued DESC
+    ''').fetchall()
+
     total_members = conn.execute('SELECT COUNT(*) FROM users').fetchone()[0]
-
-    # Total books in library
     total_books = conn.execute('SELECT COUNT(*) FROM books').fetchone()[0]
 
     conn.close()
 
     return render_template(
         'reports.html',
-        weekly_issued=weekly_issued,
-        monthly_issued=monthly_issued,
-        yearly_issued=yearly_issued,
+        daily_borrows=daily_borrows,
+        weekly_borrows=weekly_borrows,
+        monthly_borrows=monthly_borrows,
         total_members=total_members,
-        total_books=total_books
+        total_books=total_books,
+        user_book_counts=user_book_counts
     )
+
 # Show books available to issue
 @app.route('/user/issue')
 def user_issue():
@@ -897,30 +941,41 @@ def user_issued_books():
     ''', (user_id,)).fetchall()
     conn.close()
     return render_template('my_books.html', books=books)
-@app.route('/borrow', methods=['POST'])
+@app.route('/borrow_book', methods=['POST'])
 def borrow_book():
     if 'user_id' not in session:
-        flash("Please login to borrow a book.", "danger")
-        return redirect(url_for('user_login'))
+        flash('Please login first.', 'warning')
+        return redirect(url_for('login'))
 
-    user_id = session['user_id']
     book_id = request.form['book_id']
-    issue_date = datetime.now().date()
-    due_date = issue_date + timedelta(days=7)
+    user_id = session['user_id']
 
     conn = get_db_connection()
 
-    # Check if already issued
-    existing = conn.execute('SELECT * FROM issued_books WHERE user_id = ? AND book_id = ? AND return_date IS NULL', (user_id, book_id)).fetchone()
+    # Check if the book is already issued to the user
+    existing = conn.execute('''
+        SELECT * FROM issued_books
+        WHERE book_id = ? AND user_id = ? AND return_date IS NULL
+    ''', (book_id, user_id)).fetchone()
+
     if existing:
-        flash("You already borrowed this book.", "warning")
-    else:
-        conn.execute('INSERT INTO issued_books (user_id, book_id, issue_date, due_date) VALUES (?, ?, ?, ?)',
-                     (user_id, book_id, issue_date, due_date))
-        conn.commit()
-        flash("Book borrowed successfully! Return within 7 days to avoid fine.", "success")
-    
+        flash('You have already borrowed this book.', 'info')
+        conn.close()
+        return redirect(url_for('user_dashboard'))
+
+    from datetime import datetime, timedelta
+    issue_date = datetime.now().date()
+    due_date = issue_date + timedelta(days=14)
+
+    conn.execute('''
+        INSERT INTO issued_books (user_id, book_id, issue_date, due_date)
+        VALUES (?, ?, ?, ?)
+    ''', (user_id, book_id, issue_date, due_date))
+
+    conn.commit()
     conn.close()
+
+    flash('Book added to your list!', 'success')
     return redirect(url_for('user_dashboard'))
 
 # -------------------- LOGOUT --------------------
