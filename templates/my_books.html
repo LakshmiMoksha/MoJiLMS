@@ -1,63 +1,121 @@
+<!-- templates/my_books.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>My Issued Books - MoJi LMS</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MoJi LMS - My Books</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body {
+            background: linear-gradient(to right, #e0eafc, #cfdef3);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background: linear-gradient(to right, #4e54c8, #8f94fb);
+        }
+        .navbar-brand {
+            color: #fff !important;
+            font-weight: bold;
+        }
+        .nav-link {
+            color: white !important;
+        }
+        .btn-return {
+            background-color: #ff5e62;
+            color: white;
+            border: none;
+        }
+        
+    </style>
 </head>
 <body>
-<!-- ✅ Background Video -->
-    <video autoplay muted loop class="bg-video">
-        <source src="{{ url_for('static', filename='video/sparkle.mp4') }}" type="video/mp4">
-        Your browser does not support the video tag.
-    </video>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4">
-        <a class="navbar-brand fw-bold" href="{{ url_for('user_dashboard') }}">MoJi LMS</a>
-        <div class="collapse navbar-collapse">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('user_dashboard') }}">Home</a></li>
-                <li class="nav-item"><a class="nav-link active" href="{{ url_for('user_issued_books') }}">My Books</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('request_book_form') }}">Request Book</a></li>
-            </ul>
-            <span class="navbar-text text-white me-3">👤 {{ session.get('user_name', 'User') }}</span>
-            <a class="btn btn-outline-light" href="{{ url_for('logout') }}">Logout</a>
-        </div>
-    </nav>
+    
 
-    <div class="container mt-5">
-        <h2 class="text-center text-white mb-4"><b>My Issued Books</b></h2>
+<nav class="navbar navbar-expand-lg">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#"> MoJi LMS</a>
+    <ul class="navbar-nav ms-auto">
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('user_dashboard') }}">Dashboard</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+      </li>
+    </ul>
+  </div>
+</nav>
 
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover shadow-sm bg-light">
-                <thead class="table-dark text-center">
-                    <tr>
-                        <th>Title</th>
-                        <th>Author</th>
-                        <th>Issued Date</th>
-                        <th>Return Date</th>
-                        <th>Fine (₹)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for book in books %}
-                    <tr class="text-center">
-                        <td>{{ book.title }}</td>
-                        <td>{{ book.author }}</td>
-                        <td>{{ book.issue_date }}</td>
-                        <td>{{ book.return_date }}</td>
-                        <td>{{ "%.2f"|format(book.fine or 0) }}</td>
-                    </tr>
+<div class="container mt-4">
+    <h3 class="mb-4"> My Books</h3>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} mt-3">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% if issued_books %}
+    <div class="table-responsive">
+      <table class="table table-bordered bg-white">
+        <thead class="table-primary">
+            <tr>
+                <th>Title</th>
+                <th>Issue Date</th>
+                <th>Due Date</th>
+                <th>Return Date</th>
+                <th>Fine (₹)</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for ib in issued_books %}
+            <tr>
+                <td>{{ ib.title }}</td>
+                <td>{{ ib.issue_date }}</td>
+                <td>{{ ib.due_date }}</td>
+                <td>{{ ib.return_date or 'Not returned' }}</td>
+                <td>{{ ib.fine or 0 }}</td>
+                <td>
+                    {% if not ib.return_date %}
+                    <form method="POST" action="{{ url_for('return_book', issue_id=ib.issue_id) }}">
+                        <button type="submit" class="btn btn-sm btn-return">Return</button>
+                    </form>
                     {% else %}
-                    <tr>
-                        <td colspan="5" class="text-center text-danger">No books issued yet.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                    <span class="text-success">Returned</span>
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+      </table>
     </div>
+    {% else %}
+        <p class="text-muted">You haven't borrowed any books yet.</p>
+    {% endif %}
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Book search functionality
+    const searchInput = document.getElementById('bookSearch');
+    const bookCards = document.querySelectorAll('#bookList .col-md-4');
 
+    searchInput.addEventListener('keyup', function () {
+        const searchValue = this.value.toLowerCase();
+
+        bookCards.forEach(card => {
+            const title = card.querySelector('h5').textContent.toLowerCase();
+            const author = card.querySelector('p').textContent.toLowerCase();
+
+            if (title.includes(searchValue) || author.includes(searchValue)) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+});
+</script>
 </body>
 </html>

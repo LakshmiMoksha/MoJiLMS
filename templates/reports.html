@@ -6,7 +6,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     
     <style>
-    .bg-video {
+        .bg-video {
             position: fixed;
             top: 0;
             left: 0;
@@ -15,23 +15,47 @@
             z-index: -1;
             object-fit: cover;
         }
-        </style>
 
+        .card {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(7px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .card-header {
+            font-weight: 600;
+            background: linear-gradient(to right, #00b09b, #96c93d); /* greenish gradient */
+            color: white;
+        }
+
+        .card-body {
+            font-size: 2rem;
+        }
+
+        .navbar {
+            background: rgba(0, 0, 0, 0.8) !important;
+        }
+
+        h2 {
+            color: #f8f9fa;
+            text-shadow: 1px 1px 4px #000;
+        }
+    </style>
 </head>
 <body>
     <!-- ✅ Background Video -->
     <video autoplay muted loop class="bg-video">
-        <source src="{{ url_for('static', filename='video/sparkle.mp4') }}" type="video/mp4">
+        <source src="{{ url_for('static', filename='video/watery.mp4') }}" type="video/mp4">
         Your browser does not support the video tag.
     </video>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4">
+
+    <nav class="navbar navbar-expand-lg navbar-dark px-4">
         <a class="navbar-brand" href="#">MoJi LMS Admin</a>
         <div class="collapse navbar-collapse" id="adminNav">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('admin_dashboard') }}">Dashboard</a>
-                </li>
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('members') }}" >Manage Members</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('members') }}">Manage Members</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ url_for('reports') }}">View Reports</a></li>
             </ul>
             <span class="navbar-text me-3 text-white">
@@ -40,54 +64,53 @@
             <a class="btn btn-outline-light" href="{{ url_for('logout') }}">Logout</a>
         </div>
     </nav>
-    
+
     <div class="container mt-5">
-        <h2 style="color: aliceblue;">Library Reports</h2>
-        <hr />
-        <div class="row">
-            <div class="col-md-3">
-                <div class="card text-white bg-primary mb-3">
-                    <div class="card-header">Books Issued This Week</div>
-                    <div class="card-body">
-                        <h3 class="card-title">{{ weekly_issued }}</h3>
+        <h2 class="mb-4"> Library Reports</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header"> Books Issued This Week</div>
+                    <div class="card-body text-center">
+                        {{ weekly_issued }}
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-3">
-                <div class="card text-white bg-info mb-3">
-                    <div class="card-header">Books Issued This Month</div>
-                    <div class="card-body">
-                        <h3 class="card-title">{{ monthly_issued }}</h3>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header" style="background: linear-gradient(to right, #2193b0, #6dd5ed);"> Books Issued This Month</div>
+                    <div class="card-body text-center">
+                        {{ monthly_issued }}
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-3">
-                <div class="card text-white bg-success mb-3">
-                    <div class="card-header">Books Issued This Year</div>
-                    <div class="card-body">
-                        <h3 class="card-title">{{ yearly_issued }}</h3>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="card text-white bg-warning mb-3">
-                    <div class="card-header">Total Members</div>
-                    <div class="card-body">
-                        <h3 class="card-title">{{ total_members }}</h3>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header" style="background: linear-gradient(to right, #cc2b5e, #753a88);"> Books Issued This Year</div>
+                    <div class="card-body text-center">
+                        {{ yearly_issued }}
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-md-3">
-                <div class="card text-white bg-danger mb-3">
-                    <div class="card-header">Total Books in Library</div>
-                    <div class="card-body">
-                        <h3 class="card-title">{{ total_books }}</h3>
+        <div class="row mt-4 g-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header" style="background: linear-gradient(to right, #f7971e, #ffd200);"> Total Members</div>
+                    <div class="card-body text-center">
+                        {{ total_members }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header" style="background: linear-gradient(to right, #1e3c72, #2a5298);"> Total Books</div>
+                    <div class="card-body text-center">
+                        {{ total_books }}
                     </div>
                 </div>
             </div>

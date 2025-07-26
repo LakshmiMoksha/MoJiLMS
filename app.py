@@ -3,6 +3,9 @@ import sqlite3
 import datetime
 from datetime import datetime, timedelta
 from flask_mail import Mail, Message
+from twilio.rest import Client
+import random
+import os
 app = Flask(__name__)
 app.secret_key = 'moji-secret-key'
 
@@ -12,10 +15,43 @@ app.config.update(
     MAIL_SERVER='smtp.gmail.com',
     MAIL_PORT=587,
     MAIL_USE_TLS=True,
-    MAIL_USERNAME='lmoksha.132@gmail.com',
-    MAIL_PASSWORD='mpul kfev dcju ucji'
+    MAIL_USERNAME='lmoksha.132@gmail.com',  # Replace with your Gmail
+    MAIL_PASSWORD='mpul kfev dcju ucji',  # Use app-specific password
+    MAIL_DEFAULT_SENDER='lmoksha.132@gmail.com'
 )
+
 mail = Mail(app)
+@app.route('/contact', methods=['GET', 'POST'])
+def contact():
+    if request.method == 'POST':
+        name = request.form.get('name')
+        email = request.form.get('email')
+        message = request.form.get('message')
+
+        msg = Message(
+            subject=f"New Contact Message from {name}",
+            sender=app.config['MAIL_DEFAULT_SENDER'],  # safer sender
+            recipients=['lmoksha.132@gmail.com']         # change to your email
+        )
+        msg.body = f"""
+        Name: {name}
+        Email: {email}
+
+        Message:
+        {message}
+        """
+
+        try:
+            mail.send(msg)
+            flash('Message sent successfully!', 'success')
+        except Exception as e:
+            print(f"Mail send error: {e}")
+            flash('Error sending message. Please try again later.', 'danger')
+
+        return redirect(url_for('contact'))
+
+    return render_template('contact.html')
+
 
 @app.route('/send_reminders')
 def send_reminders():
@@ -237,21 +273,77 @@ def register_user():
         phone = request.form['phone'].strip()
         password = request.form['password'].strip()
 
-        try:
-            conn = get_db_connection()
-            conn.execute(
-                "INSERT INTO users (username, email, phone, password) VALUES (?, ?, ?, ?)",
-                (username, email, phone, password)
-            )
-            conn.commit()
-            flash('User registered successfully!', 'success')
-            return redirect(url_for('home'))
-        except sqlite3.IntegrityError:
-            flash('Username or Email already exists.', 'danger')
-        finally:
+        # Check for duplicate username/email
+        conn = get_db_connection()
+        existing_user = conn.execute(
+            "SELECT * FROM users WHERE username = ? OR email = ?",
+            (username, email)
+        ).fetchone()
+
+        if existing_user:
             conn.close()
+            flash('Username or Email already exists.', 'danger')
+            return redirect(url_for('register_user'))
+
+        # Generate OTP and store user in session
+        otp = str(random.randint(100000, 999999))
+        session['otp'] = otp
+        session['temp_user'] = {
+            'username': username,
+            'email': email,
+            'phone': phone,
+            'password': password
+        }
+
+        # Send OTP via email
+        try:
+            msg = Message("MoJi Library - Email Verification OTP",
+                          sender=app.config['MAIL_DEFAULT_SENDER'],
+                          recipients=[email])
+            msg.body = f"Hello {username},\n\nYour OTP for registration is: {otp}\n\nRegards,\nMoJi Library Team"
+            mail.send(msg)
+            flash('An OTP has been sent to your email. Please verify to complete registration.', 'info')
+            return redirect(url_for('verify_otp'))
+        except Exception as e:
+            flash('Failed to send OTP. Please try again later.', 'danger')
+            return redirect(url_for('register_user'))
 
     return render_template('register_user.html')
+
+@app.route('/verify_otp', methods=['GET', 'POST'])
+def verify_otp():
+    if request.method == 'POST':
+        entered_otp = request.form.get('otp')
+        stored_otp = session.get('otp')
+        temp_user = session.get('temp_user')
+
+        if not stored_otp or not temp_user:
+            flash("Session expired or invalid access. Please register again.", "danger")
+            return redirect(url_for('register_user'))
+
+        if entered_otp == stored_otp:
+            try:
+                conn = get_db_connection()
+                conn.execute(
+                    "INSERT INTO users (username, email, phone, password) VALUES (?, ?, ?, ?)",
+                    (temp_user['username'], temp_user['email'], temp_user['phone'], temp_user['password'])
+                )
+                conn.commit()
+                flash('Registration successful! Please log in.', 'success')
+                return render_template('base.html')
+
+            except sqlite3.IntegrityError:
+                flash('User already exists or error saving data.', 'danger')
+            finally:
+                conn.close()
+        else:
+            flash('Invalid OTP. Please try again.', 'danger')
+
+        # Always clear OTP and temp_user after one verification attempt
+        session.pop('otp', None)
+        session.pop('temp_user', None)
+
+    return render_template('verify_otp.html')
 
 
 # -------------------- ADMIN LOGIN --------------------
@@ -274,9 +366,7 @@ def admin_login():
 def about():
     return render_template("about.html")
 
-@app.route("/contact")
-def contact():
-    return render_template("contact.html")
+
 
 # -------------------- ADMIN DASHBOARD --------------------
 @app.route('/admin/dashboard', endpoint='admin_dashboard')
@@ -617,44 +707,46 @@ def issue_book(book_id):
     flash("Book issued successfully! Please return within 7 days.", "success")
     return redirect(url_for('my_books'))  # or dashboard
 # Return a book
-from datetime import datetime
+
 
 @app.route('/return/<int:issue_id>', methods=['POST'])
 def return_book(issue_id):
     conn = get_db_connection()
-
-    # Make sure the column is 'issue_id', not 'id'
     issue = conn.execute("SELECT * FROM issued_books WHERE issue_id = ?", (issue_id,)).fetchone()
 
     if issue is None:
-        flash("Issued book not found.", "danger")
+        flash(" Issued book not found.", "danger")
         conn.close()
         return redirect(url_for('user_dashboard'))
 
-    # Check if already returned
+    # Already returned
     if issue['return_date']:
-        flash("Book already returned.", "warning")
+        flash(" This book has already been returned.", "warning")
         conn.close()
         return redirect(url_for('user_dashboard'))
 
-    from datetime import datetime
-
-    return_date = datetime.now().strftime("%Y-%m-%d")
+    # Calculate fine
     due_date = datetime.strptime(issue['due_date'], "%Y-%m-%d")
-    returned_date = datetime.strptime(return_date, "%Y-%m-%d")
+    return_date = datetime.now()
+    days_late = (return_date - due_date).days
+    fine = 0
 
-    days_late = (returned_date - due_date).days
-    fine = max(0, days_late * 10)  # ₹10 per day late
+    if days_late > 0:
+        fine = days_late * 5  # Example fine: ₹5 per day late
 
-    # Update issued_books with return_date and fine
+    # Update return_date and fine
     conn.execute("""
         UPDATE issued_books
         SET return_date = ?, fine = ?
         WHERE issue_id = ?
-    """, (return_date, fine, issue_id))
+    """, (return_date.strftime("%Y-%m-%d"), fine, issue_id))
+    conn.commit()
+    conn.close()
 
-    
-    flash("Book returned successfully!", "success")
+    flash("✅ Book returned successfully!", "success")
+    if fine > 0:
+        flash(f"⚠️ You returned the book {days_late} day(s) late. Fine applied: ₹{fine}", "warning")
+
     return redirect(url_for('user_dashboard'))
 
 
@@ -839,6 +931,7 @@ def logout():
     session.pop('admin', None)
     flash('Logged out successfully!', 'info')
     return redirect(url_for('home'))
+
 
 # Initialize DB, seed books and run app
 if __name__ == '__main__':

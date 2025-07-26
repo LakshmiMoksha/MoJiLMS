@@ -83,7 +83,11 @@
 
     <form class="glass-form w-100" method="POST" action="{{ url_for('register_user') }}">
         <h2 class="text-center mb-4">User Registration</h2>
-
+        <div class="mb-3">
+            <label for="username">Username</label>
+            <input id="username" type="text" class="form-control" name="username" autocomplete="username" required>
+        </div>
+        
         <div class="mb-3">
             <label for="email">Email address</label>
             <input id="email" type="email" class="form-control" name="email" autocomplete="email" required>
@@ -94,10 +98,6 @@
             <input id="phone" type="tel" class="form-control" name="phone" autocomplete="tel" required>
         </div>
 
-        <div class="mb-3">
-            <label for="username">Username</label>
-            <input id="username" type="text" class="form-control" name="username" autocomplete="username" required>
-        </div>
 
         <div class="mb-3">
             <label for="password">Password</label>

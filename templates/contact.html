@@ -5,61 +5,138 @@
     <title>Contact Us</title>
     <style>
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background: #e2eafc;
             margin: 0;
             padding: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: #e0d4ff;
         }
+
+        .bg-video {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+            z-index: -1;
+            object-fit: cover;
+        }
+
         .container {
-            max-width: 600px;
-            margin: 50px auto;
-            background: white;
-            padding: 40px;
-            border-radius: 16px;
-            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+            max-width: 650px;
+            margin: 80px auto;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 40px 30px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
+
         h1 {
-            color: #004aad;
+            text-align: center;
+            margin-bottom: 30px;
+            color: #fff;
+            font-size: 2rem;
         }
+
         label {
             font-weight: bold;
+            color: #eee;
         }
+
         input, textarea {
             width: 100%;
-            padding: 12px;
-            margin-top: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-        }
-        button {
-            background-color: #004aad;
-            color: white;
-            padding: 12px 20px;
+            padding: 14px;
+            margin: 10px 0 20px 0;
             border: none;
-            border-radius: 8px;
-            cursor: pointer;
+            border-radius: 12px;
+            font-size: 15px;
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #333;
         }
+
+        input:focus, textarea:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px #c4b5fd;
+        }
+
+        button {
+            width: 100%;
+            background: linear-gradient(to right, #a78bfa, #7c3aed);
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s ease-in-out;
+        }
+
         button:hover {
-            background-color: #00327f;
+            background: linear-gradient(to right, #7c3aed, #6d28d9);
+        }
+
+        .flash-message {
+            padding: 10px;
+            margin-top: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        @media screen and (max-width: 700px) {
+            .container {
+                margin: 40px 20px;
+                padding: 30px 20px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Contact Us</h1>
-        <form action="#" method="post">
-            <label for="name">Your Name:</label>
-            <input type="text" id="name" name="name" placeholder="Enter your name" required>
 
-            <label for="email">Email Address:</label>
-            <input type="email" id="email" name="email" placeholder="you@example.com" required>
+<!-- Background Video -->
+<video autoplay muted loop class="bg-video">
+    <source src="{{ url_for('static', filename='video/watery.mp4') }}" type="video/mp4">
+    Your browser does not support the video tag.
+</video>
 
-            <label for="message">Message:</label>
-            <textarea id="message" name="message" rows="5" placeholder="Your message..." required></textarea>
+<div class="container">
+    <h1>Contact Us</h1>
+    <form action="{{ url_for('contact') }}" method="POST">
+        <label for="name">Your Name:</label>
+        <input type="text" id="name" name="name" placeholder="Enter your name" required>
 
-            <button type="submit">Send Message</button>
-        </form>
-    </div>
+        <label for="email">Email Address:</label>
+        <input type="email" id="email" name="email" placeholder="you@example.com" required>
+
+        <label for="message">Message:</label>
+        <textarea id="message" name="message" rows="5" placeholder="Your message..." required></textarea>
+
+        <button type="submit">Send Message</button>
+    </form>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash-message {{ category }}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+</div>
+
 </body>
 </html>
