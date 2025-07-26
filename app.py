@@ -3,9 +3,8 @@ import sqlite3
 import datetime
 from datetime import datetime, timedelta
 from flask_mail import Mail, Message
-from twilio.rest import Client
 import random
-import os
+
 app = Flask(__name__)
 app.secret_key = 'moji-secret-key'
 
