@@ -7,10 +7,15 @@ The platform includes secure OTP-based email registration, automated due-date re
 *Tech Stack*
 
 Frontend: HTML5, CSS3, Bootstrap
+
 Backend: Flask (Python), Jinja2
+
 Database: SQLite
+
 Authentication: Email OTP verification using Flask-Mail
+
 Deployment: Render (or any Flask-supported hosting)
+
 
 *Core Features*
 
