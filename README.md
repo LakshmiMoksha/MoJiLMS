@@ -17,10 +17,11 @@ The platform includes secure OTP-based email registration, automated due-date re
 
 *Deployment*: Render (or any Flask-supported hosting)
 
+---
+
 
 # *Core Features*
-
-# *User Features* :
+*User Features* :
 
 - Account registration via secure OTP email verification
 
@@ -38,7 +39,7 @@ The platform includes secure OTP-based email registration, automated due-date re
 
 - Access daily, weekly, and monthly activity statistics
 
-# *Admin Features* :
+ *Admin Features* :
 
 - Dedicated admin login
 
